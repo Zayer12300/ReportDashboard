@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>ASMO Procurement Exception Control Tower</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <!-- Clean Passwordless Logon Portal -->
+  <div id="loginPortal" class="login-portal">
+    <div class="login-card">
+      <div class="login-logo-wrap">
+        <img class="login-logo" src="./assets/logo.png" alt="ASMO Logo">
+      </div>
+      <h2>Procurement Exception Control Tower</h2>
+      <p class="muted">Access restricted to authorized ASMO System Analysts and Procurement Operations.</p>
+      
+      <div class="login-actions">
+        <button id="btnSSOLogin" class="btn btn-primary" style="width:100%; justify-content:center; height:44px; font-size:13px;">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Log in with Corporate SSO
+        </button>
+        <button id="btnPasskeyLogin" class="btn btn-secondary" style="width:100%; justify-content:center; height:44px; font-size:13px;">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5l-.5-.5"/></svg>
+          Log in with Biometric Passkey
+        </button>
+      </div>
+
+      <div class="login-footer">
+        <span class="dot pulse"></span>
+        <span class="muted">SAP SSO session required for live OData access.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Application Container -->
+  <div id="appContainer" class="app-container" style="display: none;">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <img class="brand-logo" src="./assets/logo.png" alt="ASMO Procurement Logo">
+        </div>
+      </div>
+
+      <!-- Live vs Demo Mode Toggle -->
+      <div class="mode-selector-wrap">
+        <div class="mode-toggle">
+          <button id="liveModeBtn" class="mode-btn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Live SAP
+          </button>
+          <button id="demoModeBtn" class="mode-btn active">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M10 15V9l5 3-5 3z"/></svg>
+            Demo Mode
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs Menu -->
+      <div class="sidebar-menu-wrap">
+        <nav class="sidebar-menu">
+          <button id="tabDashboard" class="menu-item active">
+            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            Control Tower
+          </button>
+          <button id="tabReports" class="menu-item">
+            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            SCM Impact Reports
+          </button>
+        </nav>
+      </div>
+
+      <!-- Sidebar Accordions (Health & Legacy Basic Auth) -->
+      <nav class="sidebar-nav">
+        <!-- OData Services Health -->
+        <div class="nav-section">
+          <details class="sidebar-accordion" open>
+            <summary class="nav-section-header">
+              <span class="section-title">OData Services Health</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="accordion-content">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span id="loginStatusText" style="font-size:10px; font-weight:700; color:var(--text-muted);">Not Connected</span>
+                <button id="showDiagnostics" class="diagnostics-btn" title="View technical diagnostics">
+                  Diagnostics
+                </button>
+              </div>
+              <div id="serviceHealth" class="service-health-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Advanced Legacy Form (Hidden by default) -->
+        <div class="nav-section credentials-section">
+          <details class="sidebar-accordion">
+            <summary class="nav-section-header">
+              <span class="section-title" style="font-size: 9px; opacity:0.5;">Advanced Basic Auth</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="accordion-content credentials-content">
+              <p class="section-desc">Legacy authentication backup. Restored session only.</p>
+              <div class="input-group">
+                <input id="usernameInput" type="text" autocomplete="username" placeholder="SAP Username">
+              </div>
+              <div class="input-group">
+                <input id="passwordInput" type="password" autocomplete="current-password" placeholder="SAP Password">
+              </div>
+              <div class="credentials-actions">
+                <button id="storeCredentialsButton" class="btn btn-primary-sm" style="flex:1;">Store</button>
+                <button id="clearCredentialsButton" class="btn btn-secondary-sm" style="flex:1;">Clear</button>
+              </div>
+              <p id="credentialStatus" class="credential-status">No credentials stored.</p>
+            </div>
+          </details>
+        </div>
+      </nav>
+
+      <!-- Sidebar Footer with Logout -->
+      <div class="sidebar-footer">
+        <div class="system-time">
+          <span class="dot pulse"></span>
+          <span id="refreshStatus">Not connected</span>
+        </div>
+        <button id="btnLogout" class="btn btn-secondary btn-logout" style="width: 100%; margin-top: 10px; justify-content: center; padding: 8px 12px; font-size:11px;">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      <!-- Top Action Bar -->
+      <header class="workspace-header">
+        <div class="header-title">
+          <h2>ASMO Procurement Control Tower</h2>
+          <p class="muted">Monitor supply chain risk and automate procurement exception resolution.</p>
+        </div>
+        <div class="header-actions">
+          <button id="connectButton" class="btn btn-primary">Connect SAP OData</button>
+          <button id="refreshButton" class="btn btn-secondary" disabled>
+            <svg class="icon spin-on-hover" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <!-- Connection / Alert Banner -->
+      <section id="connectionBanner" class="connection-banner" aria-live="polite">
+        <div class="banner-icon-wrap">
+          <svg class="banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
+        </div>
+        <div class="banner-body">
+          <strong>SAP SSO connection required</strong>
+          <p>Reuses your active corporate SAP session. This dashboard never asks for or transmits credentials.</p>
+        </div>
+        <div class="banner-actions">
+          <button id="openSapButton" class="btn btn-link">Open SAP Login</button>
+        </div>
+      </section>
+
+      <!-- Executive Summaries -->
+      <section class="summary-strip" aria-label="Executive summary">
+        <article class="summary-card connection-summary">
+          <div class="summary-info">
+            <span class="summary-eyebrow">Connection Status</span>
+            <h3 id="summaryConnection">Not connected</h3>
+            <span id="summaryConnectionNote" class="summary-note">Complete SAP SSO to load live OData</span>
+          </div>
+          <div class="summary-icon-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.59 16.11a6 6 0 0 1 6.82 0M12 20h.01"/></svg>
+          </div>
+        </article>
+        <article class="summary-card attention-summary">
+          <div class="summary-info">
+            <span class="summary-eyebrow">Attention Today</span>
+            <h3 id="summaryAttention">0</h3>
+            <span id="summaryAttentionNote" class="summary-note">Critical & high severity exceptions</span>
+          </div>
+          <div class="summary-icon-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
+          </div>
+        </article>
+        <article class="summary-card exposure-summary">
+          <div class="summary-info">
+            <span class="summary-eyebrow">Deleted Exposure</span>
+            <h3 id="summaryDeleted">0</h3>
+            <span id="summaryDeletedNote" class="summary-note">Deleted or marked-for-deletion records</span>
+          </div>
+          <div class="summary-icon-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16"/></svg>
+          </div>
+        </article>
+      </section>
+
+      <!-- Dashboard Filter Panel -->
+      <section class="filter-panel" aria-label="Dashboard filters">
+        <div class="filter-grid">
+          <div class="filter-col">
+            <label for="companyFilter">Company Code</label>
+            <select id="companyFilter"><option value="">All companies</option></select>
+          </div>
+          <div class="filter-col">
+            <label for="plantFilter">Plant</label>
+            <select id="plantFilter"><option value="">All plants</option></select>
+          </div>
+          <div class="filter-col">
+            <label for="supplierFilter">Supplier</label>
+            <select id="supplierFilter"><option value="">All suppliers</option></select>
+          </div>
+          <div class="filter-col">
+            <label for="buyerFilter">Buyer / Owner</label>
+            <select id="buyerFilter"><option value="">All buyers</option></select>
+          </div>
+          <div class="filter-col">
+            <label for="purchOrgFilter">Purchasing Org.</label>
+            <select id="purchOrgFilter"><option value="">All organizations</option></select>
+          </div>
+          <div class="filter-col">
+            <label for="severityFilter">Severity</label>
+            <select id="severityFilter">
+              <option value="">All severities</option>
+              <option>Critical</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+          </div>
+          <div class="filter-col">
+            <label for="dateFromFilter">From Date</label>
+            <input id="dateFromFilter" type="date">
+          </div>
+          <div class="filter-col">
+            <label for="dateToFilter">To Date</label>
+            <input id="dateToFilter" type="date">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button id="clearFilters" class="btn btn-secondary-sm">Clear Filters</button>
+        </div>
+      </section>
+
+      <!-- VIEW 1: Control Tower Dashboard View -->
+      <section id="dashboardView" class="tab-content active">
+        <!-- Dynamic Key Performance Indicators -->
+        <div id="kpiGrid" class="kpi-grid" style="margin-bottom: 16px;" aria-label="Key performance indicators">
+          <!-- Dynamically populated by components.js -->
+        </div>
+
+        <!-- Main Visualizations & Action Table Grid -->
+        <div class="dashboard-grid">
+          <!-- 30-Day Trend Chart Pane -->
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">30-Day Volume Signal</span>
+                <h3>Exceptions by Severity</h3>
+              </div>
+              <span class="panel-note">Rolling daily exception mix (last 30 days)</span>
+            </div>
+            <div class="chart-container">
+              <div id="trendChart" class="trend-chart empty-state">Connect to SAP OData to load exception trends.</div>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-dot critical"></span>Critical</span>
+              <span class="legend-item"><span class="legend-dot high"></span>High</span>
+              <span class="legend-item"><span class="legend-dot medium"></span>Medium</span>
+              <span class="legend-item"><span class="legend-dot low"></span>Low</span>
+            </div>
+          </article>
+
+          <!-- Category Breakdown Pane -->
+          <article class="panel breakdown-panel">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">Process Integrity</span>
+                <h3>Exception Categories</h3>
+              </div>
+            </div>
+            <div id="categoryBreakdown" class="breakdown-list empty-state">No data loaded.</div>
+          </article>
+
+          <!-- Deleted Objects Exposure Pane -->
+          <article class="panel breakdown-panel">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">Audit & Risk Exposure</span>
+                <h3>Deleted Documents</h3>
+              </div>
+            </div>
+            <div id="deletionBreakdown" class="breakdown-list empty-state">No data loaded.</div>
+          </article>
+
+          <!-- Supplier Ranking Pane -->
+          <article class="panel breakdown-panel">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">Concentration Analysis</span>
+                <h3>Top Impacted Suppliers</h3>
+              </div>
+            </div>
+            <div id="supplierRanking" class="breakdown-list empty-state">No data loaded.</div>
+          </article>
+
+          <!-- Prioritized Exception Queue Table (Full Width) -->
+          <article class="panel table-panel">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">Prioritized Work Queue</span>
+                <h3>Exceptions Requiring Attention</h3>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button id="exportQueueCsv" class="btn btn-secondary-sm">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                  Export CSV
+                </button>
+                <span id="resultCount" class="badge">0 exceptions</span>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Severity</th>
+                    <th>Document Reference</th>
+                    <th>Exception Details</th>
+                    <th>Supplier</th>
+                    <th>Plant</th>
+                    <th>Age</th>
+                    <th>Value</th>
+                    <th>Owner</th>
+                  </tr>
+                </thead>
+                <tbody id="exceptionTableBody">
+                  <tr><td colspan="8" class="table-empty">Connect to SAP OData to build the work queue.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- VIEW 2: SCM Impact & Analytical Reports View -->
+      <section id="reportsView" class="tab-content" style="display:none;">
+        <div class="reports-header-summary">
+          <div class="reports-header-body">
+            <h3>Supply Chain Impact Analysis</h3>
+            <p class="muted">Analytical audits compiled specifically for System Analysts to map bottlenecks, master data gaps, and operations value-at-risk.</p>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Report 1: Operational Value at Risk by Plant -->
+          <article class="panel report-card-panel">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">Plant Risk Assessment</span>
+                <h3>Operational Value at Risk by Plant</h3>
+              </div>
+              <button id="exportOperationalRiskCsv" class="btn btn-secondary-sm">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Export CSV
+              </button>
+            </div>
+            <div class="table-wrap">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Plant Code</th>
+                    <th>Exception Count</th>
+                    <th>Critical / High Cases</th>
+                    <th>Value at Risk</th>
+                  </tr>
+                </thead>
+                <tbody id="operationalRiskTableBody">
+                  <tr><td colspan="4" class="table-empty">Authenticate to load report.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <!-- Report 2: Supplier Lead-Time Overdue & Risk Bottlenecks -->
+          <article class="panel report-card-panel">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">Supply Chain Logistics</span>
+                <h3>Supplier Delivery Risk & Bottlenecks</h3>
+              </div>
+              <button id="exportSupplierRiskCsv" class="btn btn-secondary-sm">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Export CSV
+              </button>
+            </div>
+            <div class="table-wrap">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Supplier Name</th>
+                    <th>Overdue Shipments</th>
+                    <th>Overdue Value</th>
+                    <th>Max Logistics Delay</th>
+                  </tr>
+                </thead>
+                <tbody id="supplierRiskTableBody">
+                  <tr><td colspan="4" class="table-empty">Authenticate to load report.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <!-- Report 3: Master Data Integrity Audit -->
+          <article class="panel report-card-panel col-span-12">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">ERP Governance</span>
+                <h3>Master Data Integrity & Interface Audit</h3>
+              </div>
+              <button id="exportDataIntegrityCsv" class="btn btn-secondary-sm">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Export CSV
+              </button>
+            </div>
+            <div class="table-wrap">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Document Reference</th>
+                    <th>Document Type</th>
+                    <th>Missing Attributes (Unassigned)</th>
+                    <th>Source SAP Interface Service</th>
+                    <th>Document Owner</th>
+                  </tr>
+                </thead>
+                <tbody id="dataIntegrityTableBody">
+                  <tr><td colspan="5" class="table-empty">Authenticate to load report.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <!-- Report 4: Buyer Processing Backlog -->
+          <article class="panel report-card-panel">
+            <div class="panel-header">
+              <div class="panel-title-wrap">
+                <span class="panel-eyebrow">Operational Capacity</span>
+                <h3>Buyer Backlog & Processing Workload</h3>
+              </div>
+              <button id="exportBuyerWorkloadCsv" class="btn btn-secondary-sm">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Export CSV
+              </button>
+            </div>
+            <div class="table-wrap">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Buyer (Owner)</th>
+                    <th>Total Backlog</th>
+                    <th>Critical</th>
+                    <th>High</th>
+                    <th>Medium</th>
+                    <th>Low</th>
+                  </tr>
+                </thead>
+                <tbody id="buyerWorkloadTableBody">
+                  <tr><td colspan="6" class="table-empty">Authenticate to load report.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <!-- Side Sheet Detail Drawer -->
+    <aside id="detailDrawer" class="drawer" aria-hidden="true">
+      <header class="drawer-header">
+        <button id="closeDrawer" class="drawer-close-btn" aria-label="Close Details">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <span class="drawer-header-eyebrow">Exception Details</span>
+      </header>
+      <div id="drawerContent" class="drawer-body">
+        <!-- Dynamically populated by components.js -->
+      </div>
+    </aside>
+    <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+
+    <!-- Connection Diagnostics Modal Dialog -->
+    <dialog id="diagnosticsDialog" class="modern-dialog">
+      <header class="dialog-header">
+        <div>
+          <h3>Connection Diagnostics</h3>
+          <p class="muted">Metadata discovery results, score rankings, and mapped aliases.</p>
+        </div>
+        <button id="closeDiagnostics" class="dialog-close-btn" aria-label="Close Dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <div class="dialog-body">
+        <pre id="diagnosticsOutput" class="code-viewer">No connection attempt yet.</pre>
+      </div>
+    </dialog>
+
+    <!-- Passkey Scan Animation Dialog -->
+    <dialog id="passkeyAuthDialog" class="modern-dialog passkey-dialog">
+      <div class="passkey-dialog-body">
+        <div class="passkey-header">
+          <h3>Biometric Security Key / ID Badge Sign In</h3>
+          <p class="muted">Tap your corporate RFID badge on the USB card reader or verify your touch fingerprint key.</p>
+        </div>
+        
+        <div class="biometric-scanner-wrap">
+          <div class="biometric-rings">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="biometric-icon-container">
+              <svg class="fingerprint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M2 12a10 10 0 0 1 18-6M5 15a8 8 0 0 1 14 0M8 18a5 5 0 0 1 8-2M12 11v6M9 14v1M15 14v1M12 21h.01"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div id="passkeyStatusText" class="passkey-status-text">Ready to scan...</div>
+        <div class="passkey-footer">
+          <button id="btnStartPasskeyScan" class="btn btn-primary" style="width: 100%; justify-content: center;">Scan Security Key</button>
+          <button onclick="document.getElementById('passkeyAuthDialog').close()" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: 10px;">Cancel</button>
+        </div>
+      </div>
+    </dialog>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
