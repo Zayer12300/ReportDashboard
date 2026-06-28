@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>ASMO Procurement Exception Control Tower</title>
+  <link rel="icon" href="./assets/asmo-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="./assets/asmo-logo.svg" alt="ASMO Procurement Analytics">
+    </div>
+    <div class="topbar-actions">
+      <div id="refreshStatus" class="refresh-status">Not connected</div>
+      <button id="connectButton" class="button button-primary">Connect SAP OData</button>
+      <button id="refreshButton" class="button button-secondary" disabled>Refresh</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="connectionBanner" class="connection-banner" aria-live="polite">
+      <div>
+        <strong>SAP SSO connection required</strong>
+        <p>Use your existing SAP session. This dashboard never asks for or stores credentials.</p>
+      </div>
+      <button id="openSapButton" class="text-button">Open SAP sign-in tab</button>
+    </section>
+
+    <section class="credential-panel" aria-label="Manual credentials">
+      <div>
+        <p class="eyebrow">Optional manual credentials</p>
+        <h2>Local-only username and password</h2>
+        <p class="muted">These values stay in the page only for the current session. They are not saved to the repo and do not override the SAP SSO limitation.</p>
+      </div>
+      <div class="credential-grid">
+        <label>Username<input id="usernameInput" type="text" autocomplete="username" placeholder="SAP username"></label>
+        <label>Password<input id="passwordInput" type="password" autocomplete="current-password" placeholder="SAP password"></label>
+        <button id="storeCredentialsButton" class="button button-secondary">Store locally</button>
+        <button id="clearCredentialsButton" class="button button-secondary">Clear</button>
+      </div>
+      <p id="credentialStatus" class="credential-status">No local credentials stored.</p>
+    </section>
+
+    <section class="summary-strip" aria-label="Executive summary">
+      <article class="summary-card summary-live">
+        <p class="eyebrow">Connection</p>
+        <h3 id="summaryConnection">Not connected</h3>
+        <span id="summaryConnectionNote">Complete SAP SSO to load live OData</span>
+      </article>
+      <article class="summary-card">
+        <p class="eyebrow">Attention today</p>
+        <h3 id="summaryAttention">0</h3>
+        <span id="summaryAttentionNote">Critical and high exceptions</span>
+      </article>
+      <article class="summary-card">
+        <p class="eyebrow">Deleted exposure</p>
+        <h3 id="summaryDeleted">0</h3>
+        <span id="summaryDeletedNote">Deleted or marked-for-deletion objects</span>
+      </article>
+    </section>
+
+    <section class="filter-panel" aria-label="Dashboard filters">
+      <label>Company<select id="companyFilter"><option value="">All companies</option></select></label>
+      <label>Plant<select id="plantFilter"><option value="">All plants</option></select></label>
+      <label>Supplier<select id="supplierFilter"><option value="">All suppliers</option></select></label>
+      <label>Buyer<select id="buyerFilter"><option value="">All buyers</option></select></label>
+      <label>Purchasing org.<select id="purchOrgFilter"><option value="">All organizations</option></select></label>
+      <label>Severity<select id="severityFilter"><option value="">All severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label>
+      <label>From<input id="dateFromFilter" type="date"></label>
+      <label>To<input id="dateToFilter" type="date"></label>
+      <button id="clearFilters" class="button button-secondary">Clear</button>
+    </section>
+
+    <section id="kpiGrid" class="kpi-grid" aria-label="Key performance indicators"></section>
+
+    <section class="dashboard-grid">
+      <article class="panel panel-wide">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">30-day signal</p>
+            <h2>Exceptions by severity</h2>
+          </div>
+          <span class="panel-note">Rolling severity mix over the last 30 days</span>
+        </div>
+        <div id="trendChart" class="trend-chart empty-state">Connect to SAP to load exception trends.</div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Exposure</p>
+            <h2>Deleted objects</h2>
+          </div>
+        </div>
+        <div id="deletionBreakdown" class="breakdown empty-state">No data loaded.</div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Process integrity</p>
+            <h2>Exception categories</h2>
+          </div>
+        </div>
+        <div id="categoryBreakdown" class="breakdown empty-state">No data loaded.</div>
+      </article>
+
+      <article class="panel panel-wide">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Prioritized queue</p>
+            <h2>What needs attention</h2>
+          </div>
+          <span id="resultCount" class="panel-note">0 exceptions</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Severity</th><th>Object</th><th>Exception</th><th>Supplier</th><th>Plant</th><th>Age</th><th>Value</th><th>Owner</th>
+              </tr>
+            </thead>
+            <tbody id="exceptionTableBody">
+              <tr><td colspan="8" class="table-empty">Connect to SAP to build the action queue.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Concentration</p>
+            <h2>Suppliers with most exceptions</h2>
+          </div>
+        </div>
+        <div id="supplierRanking" class="breakdown empty-state">No data loaded.</div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Technical health</p>
+            <h2>OData services</h2>
+          </div>
+          <button id="showDiagnostics" class="text-button">Details</button>
+        </div>
+        <div id="serviceHealth" class="service-health"></div>
+      </article>
+    </section>
+  </main>
+
+  <aside id="detailDrawer" class="drawer" aria-hidden="true">
+    <button id="closeDrawer" class="drawer-close" aria-label="Close details">×</button>
+    <div id="drawerContent"></div>
+  </aside>
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+
+  <dialog id="diagnosticsDialog">
+    <div class="dialog-header">
+      <h2>Connection diagnostics</h2>
+      <button id="closeDiagnostics" class="drawer-close">×</button>
+    </div>
+    <p class="muted">Metadata discovery results are shown below. No credentials are collected or logged.</p>
+    <pre id="diagnosticsOutput">No connection attempt yet.</pre>
+  </dialog>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
